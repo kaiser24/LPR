@@ -186,16 +186,10 @@ if __name__ == "__main__":
             cv2.imwrite('photo.jpg',Ilp)
             r = detect(net, meta, b"photo.jpg",0.4)
            # print(r)
-            posicion = [0]*7
-            letra= [0]*7
-            cont=0
             for det in r[0]:
-                print(det[0]) #letra o numero placa
-                print(det[1])#Fiabilidad
-                print(det[2])#posición de la letra o numero
-                posicion[cont]=det[2][0]
-                letra[cont]=det[0]
-                cont=cont+1
+                print(det[0])
+                print(det[1])
+                print(det[2])
                 box=[int(kk) for kk in det[2]]
                 cv2.rectangle(
                     Ilp,
@@ -215,27 +209,10 @@ if __name__ == "__main__":
                 )
             cv2.imshow("BITCH",Ilp)
             cv2.waitKey(0)
-            print(posicion)
-            while 0 in posicion:
-                posicion.remove(0)
-            desorganizado=posicion.copy()
-            posicion.sort() #posicion organizada
-            tam=len(posicion)
-            print("posicion organizada")
-            print(posicion)
-            print("Letra")
-            print(letra)
-            matricula= [0]*7
-            cont1=0
-            while cont1 < tam:
-                print(desorganizado.index(posicion[cont1]))
-                matricula[cont1]=letra[desorganizado.index(posicion[cont1])]
-                cont1=cont1+1
-            print(matricula)
-
 
         cv2.imshow("origi",Ivehicle)
         cv2.waitKey(10)
+
    
         
         #for det in r[0]:
