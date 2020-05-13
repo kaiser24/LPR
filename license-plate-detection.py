@@ -19,7 +19,7 @@ if __name__ == '__main__':
 	wpod_net = load_model(wpod_net_path)
 
 	print ('Searching for license plates using WPOD-NET')
-	cap=cv2.VideoCapture('/home/santi/Downloads/LPR10.mp4')
+	cap=cv2.VideoCapture('/home/pdi/LPR/Agosto29_Fixed.avi')
 	while True:
 
 		

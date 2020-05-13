@@ -6,9 +6,6 @@ from src.keras_utils 			import load_model, detect_lp
 from src.utils 					import im2single    
 import numpy as  np
 import time
-import tensorflow as tf
-from keras import backend as K
-import keras
 
 def sample(probs):
     s = sum(probs)
@@ -157,109 +154,71 @@ if __name__ == "__main__":
     #meta = load_meta("cfg/imagenet1k.data")
     #r = classify(net, meta, im)
     #print r[:10]
-    SHOW_TIME = True
     net = load_net(b"data/ocr/ocr-net.cfg", b"data/ocr/ocr-net.weights", 0)
     meta = load_meta(b"data/ocr/ocr-net.data")
     lp_threshold = .5
 
     wpod_net_path = 'data/lp-detector/wpod-net_update1.h5'
+    wpod_net = load_model(wpod_net_path)
 
-    config = tf.ConfigProto( device_count = {'GPU': 0} ) 
-    sess = tf.Session(config=config) 
-    keras.backend.set_session(sess)
-    with tf.device('/device:XLA_GPU:0'):
-        #new_model = load_model('test_model.h5')
-        wpod_net = load_model(wpod_net_path)
-    #wpod_net = load_model(wpod_net_path)
-    #print(k.tensorflow_backend._get_available_gpus())
     #print ('Searching for license plates using WPOD-NET')
-    cap=cv2.VideoCapture('/media/felipe/Otros/WORK_SPACE/Lpr/LPR/lpr1.webm') 
-    while cap.isOpened():
-        prev_time = time.time()
+    cap=cv2.imread('/media/felipe/Otros/WORK_SPACE/Lpr/LPR/license.jpg') 
+    prev_time = time.time()
+    Ilp = cap
+    #print(LlpImgs)
+    
+    #cv2.imshow("???",Ilp)
+    #cv2.waitKey(10)
+    cv2.imwrite('photo.jpg',Ilp)
+    r = detect(net, meta, b"photo.jpg",0.4)
+    # print(r)
+    posicion = [0]*7
+    letra= [0]*7
+    cont=0
+    for det in r[0]:
+        #print(det[0]) #letra o numero placa
+        #print(det[1])#Fiabilidad
+        #print(det[2])#posición de la letra o numero
+        posicion[cont]=det[2][0]
+        letra[cont]=det[0]
+        cont=cont+1
+        box=[int(kk) for kk in det[2]]
+        cv2.rectangle(
+            Ilp,
+            (int(box[0]-box[2]/2), int(box[1]-box[3]/2)),
+            (int(box[0]+box[2]/2), int(box[1]+box[3]/2)),
+            (0, 255, 0),
+            3
+        )
 
-        
-        ret, Ivehicle = cap.read()
-        if not ret:
-            print('Error reading frame or video finished')
-            break
-
-        ratio = float(max(Ivehicle.shape[:2]))/min(Ivehicle.shape[:2])
-        side  = int(ratio*288.)
-        bound_dim = min(side + (side%(2**4)),608)
-
-        #print("\t\tBound dim: %d, ratio: %f" % (bound_dim,ratio))
-        prev_time_det = time.time()
-        Llp,LlpImgs,_ = detect_lp(wpod_net,im2single(Ivehicle),bound_dim,2**4,(240,80),lp_threshold)
-        if SHOW_TIME:
-            print('lp det time', time.time()-prev_time_det)
-        #print(len(LlpImgs))
-        ocr_ptime = time.time()
-        for i in range(len(LlpImgs)):
-            Ilp = LlpImgs[i]
-            #print(LlpImgs)
-            
-            Ilp=Ilp*255
-            Ilp=Ilp.astype(np.uint8)
-            #cv2.imshow("???",Ilp)
-            #cv2.waitKey(10)
-            
-            cv2.imwrite('photo.jpg',Ilp)
-            r = detect(net, meta, b"photo.jpg",0.4)
-            
-            #print(r)
-            posicion = [0]*9
-            letra= [0]*9
-            cont=0
-            for det in r[0]:
-                #print(det[0]) #letra o numero placa
-                #print(det[1])#Fiabilidad
-                #print(det[2])#posición de la letra o numero
-
-                posicion[cont]=det[2][0]
-                letra[cont]=det[0].decode("utf-8")
-                cont=cont+1
-                box=[int(kk) for kk in det[2]]
-                cv2.rectangle(
-                    Ilp,
-                    (int(box[0]-box[2]/2), int(box[1]-box[3]/2)),
-                    (int(box[0]+box[2]/2), int(box[1]+box[3]/2)),
-                    (0, 255, 0),
-                    3
-                )
-
-                cv2.putText(Ilp,
-                    str(det[0])[2], 
-                    (int(box[0]), int(box[1])), 
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (255,255,255),
-                    1
-                )
-            cv2.imshow("BITCH",Ilp)
-            cv2.waitKey(2)
-            #print(posicion)
-            while 0 in posicion:
-                posicion.remove(0)
-            desorganizado=posicion.copy()
-            posicion.sort() #posicion organizada
-            tam=len(posicion)
-            #print("posicion organizada")
-            #print(posicion)
-            #print("Letra")
-            print(letra)
-            matricula= [0]*7
-            cont1=0
-            while cont1 < tam:
-                #print(desorganizado.index(posicion[cont1]))
-                matricula[cont1]=letra[desorganizado.index(posicion[cont1])]
-                cont1=cont1+1
-            #print(matricula)
-        if SHOW_TIME:
-            print('yolo time:', time.time() - ocr_ptime)
-
-        cv2.imshow("origi",Ivehicle)
-        cv2.waitKey(2)
-        if SHOW_TIME:
-            print("FPS: ", 1.0 / (time.time() - prev_time))
+        cv2.putText(Ilp,
+            str(det[0])[2], 
+            (int(box[0]), int(box[1])), 
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255,255,255),
+            1
+        )
+    cv2.imshow("BITCH",Ilp)
+    cv2.waitKey(0)
+    print(time.time() - prev_time)
+    #print(posicion)
+    while 0 in posicion:
+        posicion.remove(0)
+    desorganizado=posicion.copy()
+    posicion.sort() #posicion organizada
+    tam=len(posicion)
+    #print("posicion organizada")
+    #print(posicion)
+    #print("Letra")
+    #print(letra)
+    matricula= [0]*7
+    cont1=0
+    while cont1 < tam:
+        #print(desorganizado.index(posicion[cont1]))
+        matricula[cont1]=letra[desorganizado.index(posicion[cont1])]
+        cont1=cont1+1
+    print(matricula)
+    
         
         #for det in r[0]:
