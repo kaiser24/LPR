@@ -10,6 +10,7 @@ import tensorflow as tf
 from keras import backend as K
 import keras
 from functions import *
+import shapely
 
 def sample(probs):
     s = sum(probs)
@@ -158,7 +159,7 @@ if __name__ == "__main__":
     #meta = load_meta("cfg/imagenet1k.data")
     #r = classify(net, meta, im)
     #print r[:10]
-    SHOW_TIME = True
+    SHOW_TIME = False
     net = load_net(b"data/ocr/ocr-net.cfg", b"data/ocr/ocr-net.weights", 0)
     meta = load_meta(b"data/ocr/ocr-net.data")
     lp_threshold = .5
@@ -174,12 +175,14 @@ if __name__ == "__main__":
     #wpod_net = load_model(wpod_net_path)
     #print(k.tensorflow_backend._get_available_gpus())
     #print ('Searching for license plates using WPOD-NET')
-    cap=cv2.VideoCapture('/media/felipe/Otros/WORK_SPACE/Lpr/LPR/lpr1.webm')
+    cap=cv2.VideoCapture('/media/felipe/Otros/WORK_SPACE/Lpr/LPR/lpr_stock.webm')
 
     ret, frame = cap.read()
     inputZones = []
     inputZones = selectPolygonZone(frame,'green')
-
+    inputZones = inputZones[0]
+    polizone = Polygon( [inputZones[0], inputZones[1], inputZones[2], inputZones[3]] )
+    zone_pts = np.array([ [inputZones[0][0],inputZones[0][1]] ,[inputZones[1][0],inputZones[1][1]] , [inputZones[2][0],inputZones[2][1]], [inputZones[3][0],inputZones[3][1]] ])
     while cap.isOpened():
         prev_time = time.time()
 
@@ -188,7 +191,8 @@ if __name__ == "__main__":
         if not ret:
             print('Error reading frame or video finished')
             break
-
+        height, width,_ = Ivehicle.shape
+        im2show = Ivehicle.copy()
         ratio = float(max(Ivehicle.shape[:2]))/min(Ivehicle.shape[:2])
         side  = int(ratio*288.)
         bound_dim = min(side + (side%(2**4)),608)
@@ -200,70 +204,81 @@ if __name__ == "__main__":
             print('lp det time', time.time()-prev_time_det)
         #print(len(LlpImgs))
         ocr_ptime = time.time()
+        cv2.polylines(im2show, [zone_pts], True, (0,255,0), 2)
         for i in range(len(LlpImgs)):
+            
             Ilp = LlpImgs[i]
-            #print(LlpImgs)
-            
-            Ilp=Ilp*255
-            Ilp=Ilp.astype(np.uint8)
-            #cv2.imshow("???",Ilp)
-            #cv2.waitKey(10)
-            
-            cv2.imwrite('photo.jpg',Ilp)
-            r = detect(net, meta, b"photo.jpg",0.4)
-            
-            #print(r)
-            posicion = [0]*9
-            letra= [0]*9
-            cont=0
-            for det in r[0]:
-                #print(det[0]) #letra o numero placa
-                #print(det[1])#Fiabilidad
-                #print(det[2])#posición de la letra o numero
+            pts_pl = Llp[i].pts
+            lp_points = int(pts_pl[0][0]*width),int(pts_pl[1][1]*height),int(pts_pl[0][2]*width),int(pts_pl[1][3]*height)
+            lp_center = (int( (pts_pl[0][0]*width + pts_pl[0][2]*width)/2 ), int( ( pts_pl[1][1]*height+ pts_pl[1][3]*height)/2) )
+            if(polizone.contains( Point( lp_center)  ) ):
+                #print(lp_points,lp_center)
+                
+                cv2.rectangle(im2show, (lp_points[0],lp_points[1]),(lp_points[2],lp_points[3]), (0,255,0), 2)
 
-                posicion[cont]=det[2][0]
-                letra[cont]=det[0].decode("utf-8")
-                cont=cont+1
-                box=[int(kk) for kk in det[2]]
-                cv2.rectangle(
-                    Ilp,
-                    (int(box[0]-box[2]/2), int(box[1]-box[3]/2)),
-                    (int(box[0]+box[2]/2), int(box[1]+box[3]/2)),
-                    (0, 255, 0),
-                    3
-                )
 
-                cv2.putText(Ilp,
-                    str(det[0])[2], 
-                    (int(box[0]), int(box[1])), 
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (255,255,255),
-                    1
-                )
-            cv2.imshow("BITCH",Ilp)
-            cv2.waitKey(2)
-            #print(posicion)
-            while 0 in posicion:
-                posicion.remove(0)
-            desorganizado=posicion.copy()
-            posicion.sort() #posicion organizada
-            tam=len(posicion)
-            #print("posicion organizada")
-            #print(posicion)
-            #print("Letra")
-            print(letra)
-            matricula= [0]*9
-            cont1=0
-            while cont1 < tam:
-                #print(desorganizado.index(posicion[cont1]))
-                matricula[cont1]=letra[desorganizado.index(posicion[cont1])]
-                cont1=cont1+1
-            #print(matricula)
+                #print(LlpImgs)
+                
+                Ilp=Ilp*255
+                Ilp=Ilp.astype(np.uint8)
+                #cv2.imshow("???",Ilp)
+                #cv2.waitKey(10)
+                
+                cv2.imwrite('photo.jpg',Ilp)
+                r = detect(net, meta, b"photo.jpg",0.4)
+                
+                #print(r)
+                posicion = [0]*9
+                letra= [0]*9
+                cont=0
+                for det in r[0]:
+                    #print(det[0]) #letra o numero placa
+                    #print(det[1])#Fiabilidad
+                    #print(det[2])#posición de la letra o numero
+
+                    posicion[cont]=det[2][0]
+                    letra[cont]=det[0].decode("utf-8")
+                    cont=cont+1
+                    box=[int(kk) for kk in det[2]]
+                    cv2.rectangle(
+                        Ilp,
+                        (int(box[0]-box[2]/2), int(box[1]-box[3]/2)),
+                        (int(box[0]+box[2]/2), int(box[1]+box[3]/2)),
+                        (0, 255, 0),
+                        3
+                    )
+
+                    cv2.putText(Ilp,
+                        str(det[0])[2], 
+                        (int(box[0]), int(box[1])), 
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255,255,255),
+                        1
+                    )
+                cv2.imshow("BITCH",Ilp)
+                cv2.waitKey(0)
+                #print(posicion)
+                while 0 in posicion:
+                    posicion.remove(0)
+                desorganizado=posicion.copy()
+                posicion.sort() #posicion organizada
+                tam=len(posicion)
+                #print("posicion organizada")
+                #print(posicion)
+                #print("Letra")
+                print(letra)
+                matricula= [0]*9
+                cont1=0
+                while cont1 < tam:
+                    #print(desorganizado.index(posicion[cont1]))
+                    matricula[cont1]=letra[desorganizado.index(posicion[cont1])]
+                    cont1=cont1+1
+                #print(matricula)
         if SHOW_TIME:
             print('yolo time:', time.time() - ocr_ptime)
 
-        cv2.imshow("origi",Ivehicle)
+        cv2.imshow("origi",im2show)
         cv2.waitKey(2)
         if SHOW_TIME:
             print("FPS: ", 1.0 / (time.time() - prev_time))
