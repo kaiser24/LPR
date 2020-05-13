@@ -9,6 +9,7 @@ import time
 import tensorflow as tf
 from keras import backend as K
 import keras
+from functions import *
 
 def sample(probs):
     s = sum(probs)
@@ -173,7 +174,12 @@ if __name__ == "__main__":
     #wpod_net = load_model(wpod_net_path)
     #print(k.tensorflow_backend._get_available_gpus())
     #print ('Searching for license plates using WPOD-NET')
-    cap=cv2.VideoCapture('/media/felipe/Otros/WORK_SPACE/Lpr/LPR/lpr1.webm') 
+    cap=cv2.VideoCapture('/media/felipe/Otros/WORK_SPACE/Lpr/LPR/lpr1.webm')
+
+    ret, frame = cap.read()
+    inputZones = []
+    inputZones = selectPolygonZone(frame,'green')
+
     while cap.isOpened():
         prev_time = time.time()
 
@@ -247,7 +253,7 @@ if __name__ == "__main__":
             #print(posicion)
             #print("Letra")
             print(letra)
-            matricula= [0]*7
+            matricula= [0]*9
             cont1=0
             while cont1 < tam:
                 #print(desorganizado.index(posicion[cont1]))
