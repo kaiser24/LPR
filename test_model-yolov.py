@@ -160,6 +160,7 @@ if __name__ == "__main__":
     #r = classify(net, meta, im)
     #print r[:10]
     SHOW_TIME = False
+    RESIZE = 0.8
     net = load_net(b"data/ocr/ocr-net.cfg", b"data/ocr/ocr-net.weights", 0)
     meta = load_meta(b"data/ocr/ocr-net.data")
     lp_threshold = .5
@@ -175,13 +176,13 @@ if __name__ == "__main__":
     #wpod_net = load_model(wpod_net_path)
     #print(k.tensorflow_backend._get_available_gpus())
     #print ('Searching for license plates using WPOD-NET')
-    cap=cv2.VideoCapture('/media/felipe/Otros/WORK_SPACE/Lpr/LPR/lpr_stock.webm')
+    cap=cv2.VideoCapture('/media/felipe/Otros/WORK_SPACE/Lpr/LPR/lpr_test1.webm')
 
     ret, frame = cap.read()
     inputZones = []
     inputZones = selectPolygonZone(frame,'green')
     inputZones = inputZones[0]
-    polizone = Polygon( [inputZones[0], inputZones[1], inputZones[2], inputZones[3]] )
+    polizone = Polygon(  [inputZones[0], inputZones[1], inputZones[2], inputZones[3]] )
     zone_pts = np.array([ [inputZones[0][0],inputZones[0][1]] ,[inputZones[1][0],inputZones[1][1]] , [inputZones[2][0],inputZones[2][1]], [inputZones[3][0],inputZones[3][1]] ])
     while cap.isOpened():
         prev_time = time.time()
@@ -267,17 +268,17 @@ if __name__ == "__main__":
                 #print("posicion organizada")
                 #print(posicion)
                 #print("Letra")
-                print(letra)
+                #print(letra)
                 matricula= [0]*9
                 cont1=0
                 while cont1 < tam:
                     #print(desorganizado.index(posicion[cont1]))
                     matricula[cont1]=letra[desorganizado.index(posicion[cont1])]
                     cont1=cont1+1
-                #print(matricula)
+                print(matricula)
         if SHOW_TIME:
             print('yolo time:', time.time() - ocr_ptime)
-
+        im2show = cv2.resize(im2show, ( int(im2show.shape[1]*RESIZE),int(im2show.shape[0]*RESIZE) ), interpolation = cv2.INTER_AREA) 
         cv2.imshow("origi",im2show)
         cv2.waitKey(2)
         if SHOW_TIME:
