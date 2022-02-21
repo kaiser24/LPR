@@ -16,43 +16,27 @@ class LPOcr:
             self.meta = load_meta(b"data/ocr/ocr-net.data")
     
     def reorganizeCharacters(self, character_list):
-        posicion = [0]*15
         position = []
         letter = []
-        letra= [0]*15
-        cont=0
         for det in character_list[0]:
-            posicion[cont]=det[2][0]
             position.append(det[2][0])
-            letra[cont]=det[0].decode("utf-8")
             letter.append(det[0].decode("utf-8"))
-            cont=cont+1
-            box=[int(kk) for kk in det[2]]
-
-        while 0 in posicion:
-            posicion.remove(0)
         
-        desorganizado=posicion.copy()
         desorganized=position.copy()
-        posicion.sort()
         position.sort()
-        tam=len(posicion)
 
-        matricula= [0]*15
-        licencePlate = desorganizado.copy()
-        cont1=0
-        while cont1 < tam:
-            matricula[cont1]=letra[desorganizado.index(posicion[cont1])]
-            cont1=cont1+1
+        licencePlate = desorganized.copy()
+
         for i in range(len(position)):
             licencePlate[i]=letter[desorganized.index(position[i])]
-        return matricula, licencePlate
+
+        return licencePlate
 
     def applyOCR(self, image_src, threshold):
         self.logger.debug(f'Image route {image_src}')
         ocrResult = detect(self.net, self.meta, image_src, threshold)
         #self.logger.debug(f'OCR result: {result}')
 
-        result, result2 = self.reorganizeCharacters(ocrResult)
-        return result, result2
+        result = self.reorganizeCharacters(ocrResult)
+        return result
 

@@ -45,7 +45,7 @@ class LPR:
             
             cv2.imwrite('photo.jpg',license_plate_img)
             prev_time_ocr = time.time()
-            ocrResult, ocrResult2 = self.lpocr_processor.applyOCR(b"photo.jpg",0.4)
+            ocrResult = self.lpocr_processor.applyOCR(b"photo.jpg",0.4)
             if SHOW_TIME:
                 lpr.logger.debug(f'LPOCR time {time.time() - prev_time_ocr}')
             
@@ -55,7 +55,7 @@ class LPR:
             if SHOW_TIME:
                 lpr.logger.debug(f'LP Reorganized {time.time() - prev_time_lpro}')
             
-            self.logger.debug(f'LP reorganized {ocrResult, ocrResult2}')
+            self.logger.debug(f'LP reorganized {ocrResult}')
             
 
 if __name__ == "__main__":
