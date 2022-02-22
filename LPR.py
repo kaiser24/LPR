@@ -20,7 +20,14 @@ class LPR:
         else:
             self.logger = Logger("INFO", COLORED=True, TAG_MODULE=self.MODULE_NAME)
 
+        self.json_output = {}
+
     def applyLPR(self, image):
+
+        # Initiallizations
+        self.json_output = {}
+        output_array = []
+        
         height, width,_ = image.shape
 
         # Applying LP Detector
@@ -36,6 +43,7 @@ class LPR:
             license_plate_img = license_img_list[i]
             license_pnts = license_pnts_list[i].pts
             lp_points = int(license_pnts[0][0]*width),int(license_pnts[1][1]*height),int(license_pnts[0][2]*width),int(license_pnts[1][3]*height)
+
             self.logger.debug(f'Licence plate: {i} points {lp_points}')
 
             #cv2.rectangle(im2show, (lp_points[0],lp_points[1]),(lp_points[2],lp_points[3]), (0,255,0), 2)
@@ -53,9 +61,18 @@ class LPR:
 
 
             if SHOW_TIME:
-                lpr.logger.debug(f'LP Reorganized {time.time() - prev_time_lpro}')
+                lpr.logger.debug(f'LP Reorganized time {time.time() - prev_time_lpro}')
             
             self.logger.debug(f'LP reorganized {ocrResult}')
+
+            lplate = { "label" : " ".join(map(str,ocrResult)), "bbox" : (lp_points) }
+            self.logger.debug(f'LP image result {lplate}')
+
+            output_array.append(lplate)     
+        
+        self.json_output = {"plates" : output_array }
+
+        return self.json_output
             
 
 if __name__ == "__main__":
