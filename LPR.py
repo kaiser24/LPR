@@ -17,6 +17,9 @@ class LPR:
 
         self.SHOW_TIME = SHOW_TIME
 
+        if detection_zone is not None:
+            self.setDetectionZone(detection_zone)
+
         self.lpocr_processor = LPOcr()
         self.lp_detector = LPDetector()
 
@@ -26,6 +29,24 @@ class LPR:
             self.logger = Logger("INFO", COLORED=True, TAG_MODULE=self.MODULE_NAME)
 
         self.json_output = {}
+
+    def setDetectionZone(self, zone):
+        self.detectionZone = zone
+        self.detectionPolygon = self.detectionZone2Polyzone(zone)
+        self.detectionZonePoints = self.detectionZone2Points(zone)
+    
+    def getDetectionZone(self):
+        return self.detectionZone
+    
+    def detectionZone2Polyzone(self, zone):
+        inputZones = [ (point["x"],point["y"]) for point in zone ]
+        polyzone = Polygon(  [inputZones[0], inputZones[1], inputZones[2], inputZones[3]] )
+        return polyzone
+
+    def detectionZone2Points(self, zone):
+        inputZones = [ (point["x"],point["y"]) for point in zone ]
+        zonePoints = np.array([ [inputZones[0][0],inputZones[0][1]] ,[inputZones[1][0],inputZones[1][1]] , [inputZones[2][0],inputZones[2][1]], [inputZones[3][0],inputZones[3][1]] ])
+        return zonePoints
 
     def applyLPR(self, image):
 
