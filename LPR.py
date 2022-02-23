@@ -77,6 +77,16 @@ class LPR:
 
         return self.json_output
 
+def list2json(points_list):
+    output_json = []
+    for coordinate in points_list:
+        point_json={}
+        point_json["x"]=coordinate[0]
+        point_json["y"]=coordinate[1]
+        output_json.append(point_json)
+    return output_json
+    
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", required=True, help="Media source. Video, Stream or Image")
@@ -86,35 +96,45 @@ def main() -> None:
     ap.add_argument("-d", "--debug", action="store_true", help="Sets Logger level to debug")
     args= vars(ap.parse_args())
     # Commad Example
-    # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm'
+    # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -iz '[{"x": 150, "y": 217}, {"x": 97, "y": 308}, {"x": 561, "y": 299}, {"x": 551, "y": 227}, {"x": 150, "y": 217}]'
+    # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -dz
 
     MODULE_NAME = "LPR STANDALONE MODULE"
 
     if args["debug"]:
-        logger = Logger("DEBUG", TAG_MODULE=MODULE_NAME)
+        logger = Logger("DEBUG", COLORED=True,  TAG_MODULE=MODULE_NAME)
     else:
-        logger = Logger("INFO", TAG_MODULE=MODULE_NAME)
+        logger = Logger("INFO", COLORED=True,  TAG_MODULE=MODULE_NAME)
 
-    if args["zone"]:
-        logger.info(f'Zone input: {args["zone"]}')
-        zone = json.loads(args["zone"])
+    # Input Zone Handling
     if args["draw_zone"]:
         logger.info(f'Draw Zone selected. ignoring Zone input')
 
         media=cv2.VideoCapture(args["input"])
-
         ret, frame = media.read()
+
         inputZones = selectPolygonZone(frame,'green')
         inputZones = inputZones[0]
-        #polizone = Polygon(  [inputZones[0], inputZones[1], inputZones[2], inputZones[3]] )    
-        media.close()
-        logger.info(f'Drawn Zone: {inputZones[0]}')
+
+        zone=list2json(inputZones)
+        media.release()
+
+        logger.debug(f'As list zone {inputZones}')
+        logger.info(f'Drawn Zone: {zone}')
+    else:
+        if args["zone"]:
+            zone = json.loads(args["zone"])
+            logger.info(f'Zone input: {zone}')
+
+        else:
+            logger.info("No zone input or drawn. applying detection on the whole image")
+            zone = None
 
 
     SHOW_TIME = True
     RESIZE = 0.55
 
-    lpr = LPR()
+    lpr = LPR(detection_zone=zone)
     media=cv2.VideoCapture(args["input"])
 
     while media.isOpened():
@@ -134,11 +154,6 @@ def main() -> None:
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
-
-        #cv2.waitKey(0)
-        
-        #for det in r[0]:
-
 
 if __name__ == "__main__":
     main()
