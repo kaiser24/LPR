@@ -161,7 +161,7 @@ def main() -> None:
     ap.add_argument("-d", "--debug", action="store_true", help="Sets Logger level to debug")
     args= vars(ap.parse_args())
     # Commad Example
-    # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -iz '[{"x": 150, "y": 217}, {"x": 97, "y": 308}, {"x": 561, "y": 299}, {"x": 551, "y": 227}, {"x": 150, "y": 217}]'
+    # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -iz '[{"x": 150, "y": 217}, {"x": 97, "y": 308}, {"x": 561, "y": 299}, {"x": 551, "y": 227}, {"x": 150, "y": 217}]' -s
     # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -dz -s
 
     MODULE_NAME = "LPR STANDALONE MODULE"
@@ -213,7 +213,7 @@ def main() -> None:
 
         if args["show_img"]:
             license_plates_json, img = lpr.applyLPR(image, return_image=True)
-            logger.debug(f'LPR Image result: {license_plates_json}')
+            logger.info(f'LPR Image result: {license_plates_json}')
                 
             cv2.namedWindow('Frame')
             cv2.imshow('Frame', img)
@@ -224,7 +224,7 @@ def main() -> None:
                 break
         else:
             license_plates_json = lpr.applyLPR(image, return_image=False)
-            logger.debug(f'LPR Image result: {license_plates_json}')
+            logger.info(f'LPR Image result: {license_plates_json}')
 
 
 if __name__ == "__main__":
