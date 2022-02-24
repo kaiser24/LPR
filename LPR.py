@@ -129,7 +129,10 @@ class LPR:
             lplate = { "label" : " ".join(map(str,ocrResult)), "bbox" : (lp_points) }
             self.logger.debug(f'LP image result {lplate}')
 
-            output_array.append(lplate)     
+            output_array.append(lplate)
+            cv2.rectangle(img2show, (lp_points[0],lp_points[1]-20),(lp_points[2], lp_points[1] ), (128,128,0), -1)
+            cv2.putText(img2show, lplate["label"] , (lp_points[0],lp_points[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
+     
         
         self.json_output = {"plates" : output_array }
 
