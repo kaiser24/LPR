@@ -2,7 +2,6 @@ import argparse
 import base64
 from ctypes import *
 import json
-from tkinter.messagebox import NO
 import cv2
 import numpy as  np
 import time
