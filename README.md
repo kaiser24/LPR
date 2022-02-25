@@ -5,9 +5,9 @@
 ```/bin/bash install.sh```
 
 #### To use it activate the venv and a couple of Env variables
-```source lpr_venv/bin/activate```
-```export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$PATH"```
-```export XLA_FLAGS='--xla_gpu_cuda_data_dir=/usr/local/cuda/'```
+```source lpr_venv/bin/activate
+export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$PATH"
+export XLA_FLAGS='--xla_gpu_cuda_data_dir=/usr/local/cuda/'```
 
 #### Then run using one of the following commands:
 ##### To run from console, using processing the whole image
