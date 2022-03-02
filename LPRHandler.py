@@ -1,12 +1,37 @@
 import argparse
+import json
 from logger import Logger
 from LPR import LPR
+from functions import *
 from simple_tracker.centroid_tracker import CentroidTracker
 
 class LPRHandler:
-    def __init__(self) -> None:
-        self.tracker = CentroidTracker()        
-        self.lpr_processor = LPR()
+    def __init__(self, LOGGER_LEVEL="DEBUG", SHOW_TIME=True, detection_zone=None) -> None:
+        self.tracker = CentroidTracker()
+        self.lpr_processor = LPR(detection_zone=detection_zone)
+
+    def applyLPR(self, image):
+        license_plates_json, img = self.lpr_processor.applyLPR(image, return_image=True)
+        return license_plates_json, img
+    
+    def json_to_list(self, plates_json):
+        bboxes = [ plate['bbox'] for plate in plates_json['plates'] ]
+        labels = [ plate['label'] for plate in plates_json['plates'] ]
+        return bboxes, labels
+
+    def update_tracker(self, plates_json):
+        objects, boxes, labels = self.tracker.update( self.json_to_list(plates_json) )
+        return objects, boxes, labels
+
+
+def list2json(points_list):
+    output_json = []
+    for coordinate in points_list:
+        point_json={}
+        point_json["x"]=coordinate[0]
+        point_json["y"]=coordinate[1]
+        output_json.append(point_json)
+    return output_json
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -21,6 +46,63 @@ def main() -> None:
     # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -iz '[{"x": 150, "y": 217}, {"x": 97, "y": 308}, {"x": 561, "y": 299}, {"x": 551, "y": 227}, {"x": 150, "y": 217}]' -s
     # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -dz -s
 
+
+    MODULE_NAME = "LPR STANDALONE MODULE"
+
+    if args["debug"]:
+        logger = Logger("DEBUG", COLORED=True,  TAG_MODULE=MODULE_NAME)
+    else:
+        logger = Logger("INFO", COLORED=True,  TAG_MODULE=MODULE_NAME)
+    
+        # Input Zone Handling
+    if args["draw_zone"]:
+        logger.info(f'Draw Zone selected. ignoring Zone input')
+
+        media=cv2.VideoCapture(args["input"])
+        ret, frame = media.read()
+
+        inputZones = selectPolygonZone(frame,'green')
+        inputZones = inputZones[0]
+
+        zone=list2json(inputZones)
+        media.release()
+
+        logger.debug(f'As list zone {inputZones}')
+        logger.info(f'Drawn Zone: {zone}')
+    else:
+        if args["zone"]:
+            zone = json.loads(args["zone"])
+            logger.info(f'Zone input: {zone}')
+
+        else:
+            logger.info("No zone input or drawn. applying detection on the whole image")
+            zone = None
+    
+    lpr_handler = LPRHandler(detection_zone=zone)
+    media=cv2.VideoCapture(args["input"])
+
+
+    while media.isOpened():
+        ret, image = media.read()
+        if not ret:
+            logger.error('Error reading frame or video. exiting')
+            break
+        im2show = image.copy()
+
+        if args["show_img"]:
+            license_plates_json, img = lpr_handler.applyLPR(image, return_image=True)
+            logger.info(f'LPR Image result: {license_plates_json}')
+                
+            cv2.namedWindow('Frame')
+            cv2.imshow('Frame', img)
+
+            fin = cv2.waitKey(1) & 0xFF
+            if(fin == ord('q')):
+                logger.info("Terminate key pressed. Closing program")
+                break
+        else:
+            license_plates_json = lpr_handler.applyLPR(image, return_image=False)
+            logger.info(f'LPR Image result: {license_plates_json}')
 
 
 
