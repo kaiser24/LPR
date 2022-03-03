@@ -31,12 +31,16 @@ class LPRHandler:
     def update_tracker(self, plates_json, image=None):
         _, boxes, labels = self.tracker.update( self.json_to_list(plates_json) )
         if image:
-            image_drawn = self.draw_plates()
+            image_drawn = self.draw_plates(boxes, labels, image)
             return self.list_to_json(boxes, labels), image_drawn
         else:
             return self.list_to_json(boxes, labels),_
     
     def draw_plates(self, boxes, labels, image):
+        for (id,box, label) in zip(boxes,boxes.values(), labels.values()):
+            cv2.rectangle(image, (box[0],box[1]),(box[2],box[3]), (128,128,0), 2)
+            cv2.rectangle(image, (box[0],box[1]-20),(box[2], box[1] ), (128,128,0), -1)
+            cv2.putText(image, 'Id:{id} L:{label}' , (box[0],box[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (84,81,83), 2)
         return image
 
 def list2json(points_list):
@@ -102,12 +106,11 @@ def main() -> None:
         if not ret:
             logger.error('Error reading frame or video. exiting')
             break
-        im2show = image.copy()
 
         if args["show_img"]:
             license_plates_json = lpr_handler.applyLPR(image)
             license_plates_json_updated, img = lpr_handler.update_tracker(license_plates_json, image)
-            logger.info(f'LPR Image result: {license_plates_json}')
+            logger.info(f'LPRHandler Image result: {license_plates_json_updated}')
                 
             cv2.namedWindow('Frame')
             cv2.imshow('Frame', img)
