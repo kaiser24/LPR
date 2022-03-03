@@ -10,19 +10,34 @@ class LPRHandler:
         self.tracker = CentroidTracker()
         self.lpr_processor = LPR(detection_zone=detection_zone)
 
-    def applyLPR(self, image):
-        license_plates_json, img = self.lpr_processor.applyLPR(image, return_image=True)
-        return license_plates_json, img
+    def applyLPR(self, image, return_image=False):
+        if return_image:
+            license_plates_json, img = self.lpr_processor.applyLPR(image, return_image=return_image)
+            return license_plates_json, img
+        else:
+            license_plates_json, img = self.lpr_processor.applyLPR(image, return_image=return_image)
+            return license_plates_json
     
     def json_to_list(self, plates_json):
         bboxes = [ plate['bbox'] for plate in plates_json['plates'] ]
         labels = [ plate['label'] for plate in plates_json['plates'] ]
         return bboxes, labels
+    
+    def list_to_json(self, boxes, labels):
+        plates_json = {}
+        plates_json["plates"] = [ {'bbox':box,'label':label,'id':id} for (id,box,label) in zip(boxes,boxes.values(), labels.values()) ]
+        return plates_json
 
-    def update_tracker(self, plates_json):
-        objects, boxes, labels = self.tracker.update( self.json_to_list(plates_json) )
-        return objects, boxes, labels
-
+    def update_tracker(self, plates_json, image=None):
+        _, boxes, labels = self.tracker.update( self.json_to_list(plates_json) )
+        if image:
+            image_drawn = self.draw_plates()
+            return self.list_to_json(boxes, labels), image_drawn
+        else:
+            return self.list_to_json(boxes, labels),_
+    
+    def draw_plates(self, boxes, labels, image):
+        return image
 
 def list2json(points_list):
     output_json = []
@@ -90,7 +105,8 @@ def main() -> None:
         im2show = image.copy()
 
         if args["show_img"]:
-            license_plates_json, img = lpr_handler.applyLPR(image, return_image=True)
+            license_plates_json = lpr_handler.applyLPR(image)
+            license_plates_json_updated, img = lpr_handler.update_tracker(license_plates_json, image)
             logger.info(f'LPR Image result: {license_plates_json}')
                 
             cv2.namedWindow('Frame')
