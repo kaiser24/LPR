@@ -1,5 +1,23 @@
+# 
+# @author Felipe Serna
+# @email damsog38@gmail.com
+# @create date 2022-02-26 20:01:10
+# @modify date 2022-03-03 14:19:39
+# @desc Licence Plate Recognition system. this module applies OCR to an image. The algorithm
+# consists of an Object Detection algorithm (YOLO) trained to detect 26 objects which are the letters
+# of the latin alphabet and this way detecting the characters on the image. it was specially trained
+# on license plate text. the characters are then reorganized and sent as output.
+
+#*************************************************************************************************
+#                                              Dependencies
+#*************************************************************************************************
+
 from darknet_v3 import *
 from logger import Logger
+
+#*************************************************************************************************
+#                                              Definitions
+#*************************************************************************************************
 
 class LPOcr:
     def __init__(self, model="darknetv3", LOGGER_LEVEL="DEBUG") -> None:

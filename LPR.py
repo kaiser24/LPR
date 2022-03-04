@@ -1,3 +1,18 @@
+# 
+# @author Felipe Serna
+# @email damsog38@gmail.com
+# @create date 2022-02-26 20:01:10
+# @modify date 2022-03-03 14:19:39
+# @desc Licence Plate Recognition system. this module integrates the LPR core and
+# uses it to detect the licenses on an image (Using an License plate detector and an OCR), 
+# then applies a simple centroid tracker and stores the detected labels of 
+# the plate and determines given the history of labels which is the correct label of the plate.
+# This class can be called on other modules to use on any algoritm
+
+#*************************************************************************************************
+#                                              Dependencies
+#*************************************************************************************************
+
 import argparse
 import base64
 from ctypes import *
@@ -9,6 +24,10 @@ from functions import *
 from LPOcr import LPOcr
 from LPDetector import LPDetector
 from logger import Logger
+
+#*************************************************************************************************
+#                                              Definitions
+#*************************************************************************************************
 
 class LPR:
     def __init__(self, LOGGER_LEVEL="DEBUG", SHOW_TIME=True, detection_zone=None) -> None:
@@ -149,6 +168,9 @@ def list2json(points_list):
         output_json.append(point_json)
     return output_json
     
+#*************************************************************************************************
+#                                              Main Function
+#*************************************************************************************************
 
 def main() -> None:
     ap = argparse.ArgumentParser()

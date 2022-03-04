@@ -1,3 +1,18 @@
+# 
+# @author Felipe Serna
+# @email damsog38@gmail.com
+# @create date 2022-02-26 20:01:10
+# @modify date 2022-03-03 14:19:39
+# @desc Licence Plate Recognition system. this module integrates the LPR core and
+# uses it to detect the licenses on an image (Using an License plate detector and an OCR), 
+# then applies a simple centroid tracker and stores the detected labels of 
+# the plate and determines given the history of labels which is the correct label of the plate.
+# This class can be called on any algorithm to be used on different situations.
+
+#*************************************************************************************************
+#                                              Dependencies
+#*************************************************************************************************
+
 import argparse
 import json
 from logger import Logger
@@ -5,8 +20,14 @@ from LPR import LPR
 from functions import *
 from simple_tracker.centroid_tracker import CentroidTracker
 
+#*************************************************************************************************
+#                                              Definitions
+#*************************************************************************************************
 class LPRHandler:
     def __init__(self, LOGGER_LEVEL="DEBUG", SHOW_TIME=True, detection_zone=None) -> None:
+        self.LOGGER_LEVEL = LOGGER_LEVEL
+        self.MODULE_NAME = "LPRHANDLER MODULE"
+
         self.tracker = CentroidTracker()
         self.lpr_processor = LPR(detection_zone=detection_zone)
 
@@ -52,6 +73,10 @@ def list2json(points_list):
         point_json["y"]=coordinate[1]
         output_json.append(point_json)
     return output_json
+
+#*************************************************************************************************
+#                                              Main Function
+#*************************************************************************************************
 
 def main() -> None:
     ap = argparse.ArgumentParser()
