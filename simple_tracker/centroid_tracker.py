@@ -25,6 +25,7 @@ class CentroidTracker:
 		self.maxDistance = maxDistance
 	
 	def addLabel(self, label, objectID):
+		if objectID not in self.labels_lists: self.labels_lists[objectID]=[]
 		self.labels_lists[objectID].append( label )
 		self.labels[objectID] = max( self.labels_lists[objectID], key= self.labels_lists[objectID].count )
 	
