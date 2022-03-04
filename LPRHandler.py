@@ -15,7 +15,7 @@ class LPRHandler:
             license_plates_json, img = self.lpr_processor.applyLPR(image, return_image=return_image)
             return license_plates_json, img
         else:
-            license_plates_json, img = self.lpr_processor.applyLPR(image, return_image=return_image)
+            license_plates_json = self.lpr_processor.applyLPR(image, return_image=return_image)
             return license_plates_json
     
     def json_to_list(self, plates_json):
@@ -29,8 +29,9 @@ class LPRHandler:
         return plates_json
 
     def update_tracker(self, plates_json, image=None):
-        _, boxes, labels = self.tracker.update( self.json_to_list(plates_json) )
-        if image:
+        boxes, labels = self.json_to_list(plates_json)
+        _, boxes, labels = self.tracker.update( boxes,labels )
+        if image is not None:
             image_drawn = self.draw_plates(boxes, labels, image)
             return self.list_to_json(boxes, labels), image_drawn
         else:
@@ -40,7 +41,7 @@ class LPRHandler:
         for (id,box, label) in zip(boxes,boxes.values(), labels.values()):
             cv2.rectangle(image, (box[0],box[1]),(box[2],box[3]), (128,128,0), 2)
             cv2.rectangle(image, (box[0],box[1]-20),(box[2], box[1] ), (128,128,0), -1)
-            cv2.putText(image, 'Id:{id} L:{label}' , (box[0],box[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (84,81,83), 2)
+            cv2.putText(image, f'Id:{id} L:{label}' , (box[0],box[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (54,51,53), 2)
         return image
 
 def list2json(points_list):
@@ -62,11 +63,11 @@ def main() -> None:
     ap.add_argument("-d", "--debug", action="store_true", help="Sets Logger level to debug")
     args= vars(ap.parse_args())
     # Commad Example
-    # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -iz '[{"x": 150, "y": 217}, {"x": 97, "y": 308}, {"x": 561, "y": 299}, {"x": 551, "y": 227}, {"x": 150, "y": 217}]' -s
-    # python3 LPR.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -dz -s
+    # python3 LPRHandler.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -iz '[{"x": 150, "y": 217}, {"x": 97, "y": 308}, {"x": 561, "y": 299}, {"x": 551, "y": 227}, {"x": 150, "y": 217}]' -s
+    # python3 LPRHandler.py -i '/mnt/72086E48086E0C03/WORK_SPACE/Lpr/test_videos/test2.webm' -dz -s
 
 
-    MODULE_NAME = "LPR STANDALONE MODULE"
+    MODULE_NAME = "LPR HANDLER MODULE"
 
     if args["debug"]:
         logger = Logger("DEBUG", COLORED=True,  TAG_MODULE=MODULE_NAME)
