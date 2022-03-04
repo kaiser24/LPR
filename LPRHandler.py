@@ -28,10 +28,17 @@ class LPRHandler:
         self.LOGGER_LEVEL = LOGGER_LEVEL
         self.MODULE_NAME = "LPRHANDLER MODULE"
 
-        self.tracker = CentroidTracker()
+        # lpr_processor applies LPDetection and OCR on a single image to get the LPs on the image
         self.lpr_processor = LPR(detection_zone=detection_zone)
 
+        # The CentroidTracker will assign an ID to each LP and will save the Labels
+        # Remembering the list labels an LP has had and determining the correct with the
+        # most frequent one.
+        self.tracker = CentroidTracker()
+    
+    # Detects LPs on an image and gets their labels (OCR)
     def applyLPR(self, image, return_image=False):
+        self.logger.debug("Applying LPR to image")
         if return_image:
             license_plates_json, img = self.lpr_processor.applyLPR(image, return_image=return_image)
             return license_plates_json, img
@@ -39,17 +46,21 @@ class LPRHandler:
             license_plates_json = self.lpr_processor.applyLPR(image, return_image=return_image)
             return license_plates_json
     
+    # Json to Lists handling data output
     def json_to_list(self, plates_json):
         bboxes = [ plate['bbox'] for plate in plates_json['plates'] ]
         labels = [ plate['label'] for plate in plates_json['plates'] ]
         return bboxes, labels
     
+    # Lists to Json handling data output
     def list_to_json(self, boxes, labels):
         plates_json = {}
         plates_json["plates"] = [ {'bbox':box,'label':label,'id':id} for (id,box,label) in zip(boxes,boxes.values(), labels.values()) ]
         return plates_json
 
+    # Updates the CentroidTracker using the new information gotten from the lpr_processor on a new image
     def update_tracker(self, plates_json, image=None):
+        self.logger.debug("Updating Tracker and LP labels")
         boxes, labels = self.json_to_list(plates_json)
         _, boxes, labels = self.tracker.update( boxes,labels )
         if image is not None:
@@ -58,7 +69,9 @@ class LPRHandler:
         else:
             return self.list_to_json(boxes, labels),_
     
+    # Draws the information obtained and returns it for better visualization
     def draw_plates(self, boxes, labels, image):
+        self.logger.debug("Drawing information to image")
         for (id,box, label) in zip(boxes,boxes.values(), labels.values()):
             cv2.rectangle(image, (box[0],box[1]),(box[2],box[3]), (128,128,0), 2)
             cv2.rectangle(image, (box[0],box[1]-20),(box[2], box[1] ), (128,128,0), -1)
@@ -99,8 +112,9 @@ def main() -> None:
     else:
         logger = Logger("INFO", COLORED=True,  TAG_MODULE=MODULE_NAME)
     
-        # Input Zone Handling
+    # Input Zone Handling
     if args["draw_zone"]:
+        # If drawing the Zone manually
         logger.info(f'Draw Zone selected. ignoring Zone input')
 
         media=cv2.VideoCapture(args["input"])
@@ -115,6 +129,7 @@ def main() -> None:
         logger.debug(f'As list zone {inputZones}')
         logger.info(f'Drawn Zone: {zone}')
     else:
+        # If the zone was input as an arg
         if args["zone"]:
             zone = json.loads(args["zone"])
             logger.info(f'Zone input: {zone}')
@@ -123,10 +138,11 @@ def main() -> None:
             logger.info("No zone input or drawn. applying detection on the whole image")
             zone = None
     
+    # Creating our LPRHandler Object
     lpr_handler = LPRHandler(detection_zone=zone)
+
+    #Openning Media and Iterating Video Frames
     media=cv2.VideoCapture(args["input"])
-
-
     while media.isOpened():
         ret, image = media.read()
         if not ret:
@@ -134,6 +150,7 @@ def main() -> None:
             break
 
         if args["show_img"]:
+            # If the result images will be shown
             license_plates_json = lpr_handler.applyLPR(image)
             license_plates_json_updated, img = lpr_handler.update_tracker(license_plates_json, image)
             logger.info(f'LPRHandler Image result: {license_plates_json_updated}')
@@ -146,10 +163,10 @@ def main() -> None:
                 logger.info("Terminate key pressed. Closing program")
                 break
         else:
-            license_plates_json = lpr_handler.applyLPR(image, return_image=False)
-            logger.info(f'LPR Image result: {license_plates_json}')
-
-
+            # If the result image wont be shown. information still output on the terminal
+            license_plates_json = lpr_handler.applyLPR(image)
+            license_plates_json_updated = lpr_handler.update_tracker(license_plates_json)
+            logger.info(f'LPRHandler Image result: {license_plates_json_updated}')
 
 if __name__ == '__main__':
     main()
