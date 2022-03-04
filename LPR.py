@@ -20,6 +20,8 @@ import json
 import cv2
 import numpy as  np
 import time
+import pyfiglet
+import iridi
 from functions import *
 from LPOcr import LPOcr
 from LPDetector import LPDetector
@@ -173,6 +175,13 @@ def list2json(points_list):
 #*************************************************************************************************
 
 def main() -> None:
+    # Displaying a cool title on the terminal
+    moduleTitle = pyfiglet.figlet_format("L-P-R", font="isometric2", width=200)
+    moduleSubtitle = pyfiglet.figlet_format("PROCESSOR", font="alligator2", width=300)
+
+    iridi.print(moduleTitle, ["#8A2387", "#E94057", "#F27121"], bold=True)
+    iridi.print(moduleSubtitle, ["#8A2387", "#E94057", "#F27121"], bold=True)
+
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", required=True, help="Media source. Video, Stream or Image")
     ap.add_argument("-iz", "--zone", required=False, help="""Points that determine the zone where to reduce the detection. as a json. Exmaple: 

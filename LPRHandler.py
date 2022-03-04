@@ -15,6 +15,8 @@
 
 import argparse
 import json
+import pyfiglet
+import iridi
 from logger import Logger
 from LPR import LPR
 from functions import *
@@ -27,6 +29,10 @@ class LPRHandler:
     def __init__(self, LOGGER_LEVEL="DEBUG", SHOW_TIME=True, detection_zone=None) -> None:
         self.LOGGER_LEVEL = LOGGER_LEVEL
         self.MODULE_NAME = "LPRHANDLER MODULE"
+        if LOGGER_LEVEL=="DEBUG":
+            self.logger = Logger("DEBUG", COLORED=True, TAG_MODULE=self.MODULE_NAME)
+        else:
+            self.logger = Logger("INFO", COLORED=True, TAG_MODULE=self.MODULE_NAME)
 
         # lpr_processor applies LPDetection and OCR on a single image to get the LPs on the image
         self.lpr_processor = LPR(detection_zone=detection_zone)
@@ -92,6 +98,13 @@ def list2json(points_list):
 #*************************************************************************************************
 
 def main() -> None:
+    # Displaying a cool title on the terminal
+    moduleTitle = pyfiglet.figlet_format("L-P-R", font="isometric2", width=200)
+    moduleSubtitle = pyfiglet.figlet_format("HANDLER", font="alligator2", width=300)
+
+    iridi.print(moduleTitle, ["#8A2387", "#E94057", "#F27121"], bold=True)
+    iridi.print(moduleSubtitle, ["#8A2387", "#E94057", "#F27121"], bold=True)
+
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", required=True, help="Media source. Video, Stream or Image")
     ap.add_argument("-iz", "--zone", required=False, help="""Points that determine the zone where to reduce the detection. as a json. Exmaple: 

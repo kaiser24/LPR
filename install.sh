@@ -15,5 +15,7 @@ python3 -m pip install tensorflow==1.14.0
 python3 -m pip install tensorflow-gpu==1.14.0
 python3 -m pip install keras==2.3
 python3 -m pip install h5py==2.10.0
+python3 -m pip install pyfiglet
+python3 -m pip install iridi
 export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$PATH"
 export XLA_FLAGS='--xla_gpu_cuda_data_dir=/usr/local/cuda/'
